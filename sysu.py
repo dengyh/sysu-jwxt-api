@@ -4,6 +4,8 @@ import urllib
 import re
 import json
 
+from config import user, passw
+
 try:
     from cStringIO import StringIO
 except:
@@ -11,11 +13,9 @@ except:
 
 loginHeader = [
     'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    # 'Accept-Encoding: gzip, deflate',
     'Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4',
     'Cache-Control: max-age=0',
     'Connection: keep-alive',
-    # 'Content-Length: 45',
     'Host: uems.sysu.edu.cn',
     'Origin: http://uems.sysu.edu.cn',
     'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36',
@@ -24,7 +24,6 @@ loginHeader = [
 
 getHeader = [
     'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    # 'Accept-Encoding: gzip, deflate, sdch',
     'Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4',
     'Connection: keep-alive',
     'Host: uems.sysu.edu.cn',
@@ -53,6 +52,7 @@ class Sysuer:
         self.urls = {
             'login': 'http://uems.sysu.edu.cn/jwxt/j_unieap_security_check.do',
             'cookie': 'http://uems.sysu.edu.cn/jwxt/',
+            'student': 'http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=judgeStu',
             'score': 'http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getKccjList',
             'grade': 'http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllJd',
             'credit': 'http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllXf',
@@ -62,7 +62,10 @@ class Sysuer:
             'school': 'http://uems.sysu.edu.cn/jwxt/quanxianLd/qxldAction.action?method=getYxxxList',
             'department': 'http://uems.sysu.edu.cn/jwxt/quanxianLd/qxldAction.action?method=getAllXsxxList',
             'profession': 'http://uems.sysu.edu.cn/jwxt/quanxianLd/qxldAction.action?method=getAllZyxxList',
+            'direction': 'http://uems.sysu.edu.cn/jwxt/quanxianLd/qxldAction.action?method=getNdzyfxmcByzyfxmView',
+            'courses': 'http://uems.sysu.edu.cn/jwxt/quanxianLd/qxldAction.action?method=getAllJxbxx',
             'selection': 'http://uems.sysu.edu.cn/jwxt/xstk/xstk.action?method=getXsxkjgxxlistByxh',
+            'table': 'http://uems.sysu.edu.cn/jwxt/KcbcxAction/KcbcxAction.action?method=getList',
         }
 
     def getData(self, url, headerCallback, callback):
@@ -121,6 +124,14 @@ class Sysuer:
             'j_username': self.username,
             'j_password': self.password,
             }, self.loginHeader, self.passWrite)
+
+    def getStudentInformation(self):
+        if self.cookie is None:
+            self.login()
+        buffer = StringIO()
+        data = '''{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": [], "responseParam": "result"}}}'''
+        self.postData(self.urls['student'], postHeader, data, self.passHeader, buffer.write)
+        return buffer.getvalue()
 
     def getScore(self, year='none', term='none', type='none', yearCondition='=', termCondition='=', typeCondition='='):
         if self.cookie is None:
@@ -202,6 +213,23 @@ class Sysuer:
         self.postData(self.urls['profession'], postHeader, data, self.passHeader, buffer.write)
         return buffer.getvalue()
 
+    def getAllDirections(self):
+        if self.cookie is None:
+            self.login()
+        buffer = StringIO()
+        data = '''{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{zyfxtranscodeStroe:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"zyfxtranscodeStroe",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.xk.zxxk.entity.NdzyTranscodeEntity"}},parameters:{"args": []}}}'''
+        self.postData(self.urls['direction'], postHeader, data, self.passHeader, buffer.write)
+        return buffer.getvalue()
+
+    # Debuging
+    # def getCourses(self):
+    #     if self.cookie is None:
+    #         self.login()
+    #     buffer = StringIO()
+    #     data = '''{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{mdtzDataStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"mdtzDataStore",pageNumber:1,pageSize:10,recordCount:1938,rowSetName:"pojo_com.neusoft.education.sysu.xk.zxxkgg.model.KkblbModel",order:"  a.jxbh,a.resource_id desc "}},parameters:{"mdtzDataStore-params": [{"name": "Filter_kkdw_0.1794278455136572", "type": "String", "value": "'62000'", "condition": " = ", "property": "kkdw"}, {"name": "Filter_kch_0.46757051984672965", "type": "String", "value": "'1000'", "condition": " = ", "property": "kch"}, {"name": "Filter_jxbh_0.2890583300647873", "type": "String", "value": "'1000'", "condition": " = ", "property": "jxbh"}, {"name": "Filter_xnd_0.16680808189385443", "type": "String", "value": "'2013-2014'", "condition": " = ", "property": "xnd"}, {"name": "Filter_xq_0.9125433259434148", "type": "String", "value": "'2'", "condition": " = ", "property": "xq"}, {"name": "Filter_jxbmc_0.3761736418217973", "type": "String", "value": "'%dsdf%'", "condition": " like ", "property": "jxbmc"}, {"name": "Filter_kcmc_0.22896691340751563", "type": "String", "value": "'%sdfsdf%'", "condition": " like ", "property": "kcmc"}, {"name": "lsmc", "type": "String", "value": "select 1 from jw_ssjh_skxx where jw_ssjh_skxx.jxbh=a.jxbh and xm1 like '%sdfsdf%')", "condition": " ( ", "property": "exists"}], "args": []}}}'''
+    #     self.postData(self.urls['courses'], postHeader, data, self.passHeader, buffer.write)
+    #     return buffer.getvalue()
+
     def getResultOfCourseSelection(self):
         if self.cookie is None:
             self.login()
@@ -210,16 +238,17 @@ class Sysuer:
         self.postData(self.urls['selection'], postHeader, data, self.passHeader, buffer.write)
         return buffer.getvalue()
 
-    def getTest(self):
+    def getCourseTable(self, year, term):
         if self.cookie is None:
             self.login()
         buffer = StringIO()
-        data = '''{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{xsxkjgStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"xsxkjgStore",pageNumber:1,pageSize:1000,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.xk.xkjg.entity.XkjgxxEntity",order:"xkjg.xnd desc,xkjg.xq desc, xkjg.jxbh"}},parameters:{"xsxkjgStore-params": [], "args": []}}}'''
-        self.postData(self.urls['test'], postHeader, data, self.passHeader, buffer.write)
+        data = '''{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": ["%s", "%s"], "responseParam": "rs"}}}''' % (term, year)
+        self.postData(self.urls['table'], postHeader, data, self.passHeader, buffer.write)
         return buffer.getvalue()
 
 if __name__ == '__main__':
-    dengyh = Sysuer('12330071', '33519000091533')
+    dengyh = Sysuer(user, passw)
+    print dengyh.getStudentInformation()
     # print dengyh.getScore()
     # print dengyh.getGrade()
     # print dengyh.getCredit()
@@ -229,4 +258,7 @@ if __name__ == '__main__':
     # print dengyh.getAllSchools()
     # print dengyh.getAllDepartments()
     # print dengyh.getAllProfessions()
+    # print dengyh.getAllDirections()
     # print dengyh.getResultOfCourseSelection()
+    # print dengyh.getCourseTable('2014-2015', '2')
+    # print dengyh.getCourses()
